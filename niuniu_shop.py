@@ -99,14 +99,13 @@ class NiuniuShop:
                     return self._merge_config(default_config, custom_config)
             return default_config
         except Exception as e:
-            self.main.context.logger.error(f"加载商城配置失败: {str(e)}")
             return default_config
 
     def _merge_config(self, base: list, custom: list) -> list:
         """合并默认配置和自定义配置"""
         config_map = {item['id']: item for item in base}
         for custom_item in custom:
-            if custom_item['id'] in config_map:
+            if custom_item['id'] in config_config_map:
                 config_map[custom_item['id']].update(custom_item)
             else:
                 config_map[custom_item['id']] = custom_item
@@ -156,18 +155,25 @@ class NiuniuShop:
                 if current >= selected_item.get('max', 3):
                     yield event.plain_result(f"⚠️ 已达到最大持有量（最大{selected_item['max']}个）")
                     return
-                
                 user_data['items'][selected_item['name']] = current + 1
                 result_msg.append(f"📦 获得 {selected_item['name']}x1")
-
             elif selected_item['type'] == 'active':
-                for effect_key, effect_value in selected_item['effect'].items():
+                # 检查 effect 是否是字典
+                if isinstance(selected_item['effect'], dict):
+                    for effect_key, effect_value in selected_item['effect'].items():
+                        original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
+                        user_data[effect_key] = original + effect_value
+                        if effect_value >= 0:
+                            result_msg.append(f"✨ {effect_key}增加了{effect_value}")
+                        else:
+                            result_msg.append(f"✨ {effect_key}减少了{-effect_value}")
+                else:
+                    # 如果 effect 不是字典，处理为字符串的情况
+                    effect_key = selected_item['effect']
+                    effect_value = 1  # 默认值，可以根据实际需求调整
                     original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
                     user_data[effect_key] = original + effect_value
-                    if effect_value >= 0:
-                        result_msg.append(f"✨ {effect_key}增加了{effect_value}")
-                    else:
-                        result_msg.append(f"✨ {effect_key}减少了{-effect_value}")
+                    result_msg.append(f"✨ {effect_key}增加了{effect_value}")
 
             # 扣除金币
             self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
@@ -176,7 +182,6 @@ class NiuniuShop:
             yield event.plain_result("✅ 购买成功\n" + "\n".join(result_msg))
         
         except Exception as e:
-            self.main.context.logger.error(f"购买失败: {str(e)}")
             yield event.plain_result("⚠️ 购买过程中出现错误，请稍后再试")
 
     def get_sign_coins(self, group_id: str, user_id: str) -> float:
@@ -266,8 +271,11 @@ class NiuniuShop:
         # 显示道具信息
         if items:
             for name, count in items.items():
-                item_info = next(i for i in self.shop_items if i['name'] == name)
-                result_list.append(f"🔹 {name}x{count} - {item_info['desc']}")
+                # 使用 next() 函数时提供默认值 None
+                item_info = next((i for i in self.shop_items if i['name'] == name), None)
+                if item_info:
+                    result_list.append(f"🔹 {name}x{count} - {item_info['desc']}")
+                # 如果找不到道具信息，不添加任何内容
         else:
             result_list.append("🛍️ 你的背包里还没有道具哦~")
         
@@ -275,8 +283,8 @@ class NiuniuShop:
         total_coins = self.get_user_coins(group_id, user_id)
         result_list.append(f"💰 你的金币：{total_coins}")
 
-        yield event.plain_result("\n".join(result_list))
-
+        await event.plain_result("\n".join(result_list))
+        return
     def get_user_items(self, group_id: str, user_id: str) -> Dict[str, int]:
         """获取用户道具"""
         user_data = self.main.get_user_data(group_id, user_id)
