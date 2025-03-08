@@ -13,15 +13,6 @@ class NiuniuShop:
         """加载商城配置"""
         default_config = [
             {
-                'id': 1,
-                'name': "妙脆角",
-                'type': 'passive', 
-                'max': 3, 
-                'desc': "🛡️ 防止一次长度减半",
-                'effect': 'prevent_halving', 
-                'price': 70 
-            },
-            {
                 'id': 2,
                 'name': "巴黎世家",
                 'type': 'active',
@@ -33,18 +24,36 @@ class NiuniuShop:
                 'id': 3,
                 'name': "巴适得板生长素",
                 'type': 'active',
-                'desc': "📏 立即增加20cm长度，但会减少2点硬度",
+                'desc': "立即增加20cm长度，但会减少2点硬度",
                 'effect': {'length': 20, 'hardness': -2},
                 'price': 50 
+            },
+            {
+                'id': 1,
+                'name': "妙脆角",
+                'type': 'passive', 
+                'max': 3, 
+                'desc': "防止一次长度减半",
+                'effect': 'prevent_halving', 
+                'price': 70 
             },
             {
                 'id': 4,
                 'name': "淬火爪刀",
                 'type': 'passive',
                 'max': 2, 
-                'desc': "🔥 触发掠夺时，额外掠夺10%长度",
+                'desc': "触发掠夺时，额外掠夺10%长度",
                 'effect': 'bonus_loot',
                 'price': 70
+            },
+            {
+                'id': 6,
+                'name': "余震",
+                'type': 'passive',
+                'max': 3,
+                'desc': "被比划时，如果失败，不扣长度",
+                'effect': 'no_deduct_on_fail',
+                'price': 80  
             },
             {
                 'id': 5,
@@ -55,39 +64,31 @@ class NiuniuShop:
                 'price': 100  
             },
             {
-                'id': 6,
-                'name': "余震",
-                'type': 'passive',
-                'max': 3,
-                'desc': "被比划时，如果失败，不扣长度",
-                'effect': 'no_deduct_on_fail',
-                'price': 100  
-            },
-            {
                 'id': 7,
-                'name': "致命节奏",  # 道具名称
-                'type': 'passive',  # 道具类型：passive-被动道具，active-主动道具
-                'max': 6,  # 最大持有量
-                'quantity': 3,  # 每次购买获得3个,如需修改其它道具每次购买获取数量请直接添加此字段
-                'desc': "短时间内多次打胶，同时不受30分钟内连续打胶的debuff（可持有3个）",
-                'effect': 'no_30min_debuff', # 道具效果
-                'price': 100 # 商品价格
+                'name': "致命节奏",  
+                'type': 'passive',  
+                'max': 20,  
+                'quantity': 5,  
+                'desc': "短时间内多次打胶或比划，同时不受30分钟内连续打胶的debuff",
+                'effect': 'no_30min_debuff', 
+                'price': 100 
             },
             {
                 'id': 8,
                 'name': "阿姆斯特朗旋风喷射炮",
                 'type': 'active',
-                'desc': "💥 长度直接+1m，硬度+10",
+                'desc': "长度直接+1m，硬度+10",
                 'effect': {'length': 100, 'hardness': 10},
                 'price': 500  
             },
             {
                 'id': 9,
                 'name': "夺心魔蝌蚪罐头",
-                'type': 'active',
+                'type': 'passive',
+                'max': 1,
                 'desc': "在比划时，有50%的概率夺取对方全部长度，10%的概率清空自己的长度，40%的概率无效",
                 'effect': 'steal_or_clear',
-                'price': 600  # 商品价格
+                'price': 600
             }
         ]
         
@@ -105,7 +106,7 @@ class NiuniuShop:
         """合并默认配置和自定义配置"""
         config_map = {item['id']: item for item in base}
         for custom_item in custom:
-            if custom_item['id'] in config_config_map:
+            if custom_item['id'] in config_map:
                 config_map[custom_item['id']].update(custom_item)
             else:
                 config_map[custom_item['id']] = custom_item
@@ -158,7 +159,6 @@ class NiuniuShop:
                 user_data['items'][selected_item['name']] = current + 1
                 result_msg.append(f"📦 获得 {selected_item['name']}x1")
             elif selected_item['type'] == 'active':
-                # 检查 effect 是否是字典
                 if isinstance(selected_item['effect'], dict):
                     for effect_key, effect_value in selected_item['effect'].items():
                         original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
@@ -168,7 +168,6 @@ class NiuniuShop:
                         else:
                             result_msg.append(f"✨ {effect_key}减少了{-effect_value}")
                 else:
-                    # 如果 effect 不是字典，处理为字符串的情况
                     effect_key = selected_item['effect']
                     effect_value = 1  # 默认值，可以根据实际需求调整
                     original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
@@ -283,11 +282,4 @@ class NiuniuShop:
         total_coins = self.get_user_coins(group_id, user_id)
         result_list.append(f"💰 你的金币：{total_coins}")
 
-        await event.plain_result("\n".join(result_list))
-        return
-    def get_user_items(self, group_id: str, user_id: str) -> Dict[str, int]:
-        """获取用户道具"""
-        user_data = self.main.get_user_data(group_id, user_id)
-        if user_data is None:
-            return {}
-        return user_data.get('items', {})
+        yield event.plain_result("\n".join(result_list))
