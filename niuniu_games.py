@@ -24,9 +24,24 @@ class NiuniuGames:
             yield event.plain_result("❌ 请先注册牛牛")
             return
 
+        # 检查冷却时间
+        last_rush_end_time = user_data.get('last_rush_end_time', 0)
+        current_time = time.time()
+        if current_time - last_rush_end_time < 1800:  # 30分钟冷却时间
+            remaining_time = 1800 - (current_time - last_rush_end_time)
+            mins = int(remaining_time // 60) + 1
+            yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
+            return
+
+        # 检查今日已冲次数
+        today_rush_count = user_data.get('today_rush_count', 0)
+        if today_rush_count > 3:
+            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
+            return
+
         # 检查是否已经在冲
         if user_data.get('is_rushing', False):
-            remaining_time = user_data['rush_start_time'] + 1800 - time.time()
+            remaining_time = user_data['rush_start_time'] + 14400 - time.time()  # 4小时 = 14400秒
             if remaining_time > 0:
                 mins = int(remaining_time // 60) + 1
                 yield event.plain_result(f"⏳ {nickname} 你已经在冲了")
@@ -35,9 +50,10 @@ class NiuniuGames:
         # 开始
         user_data['is_rushing'] = True
         user_data['rush_start_time'] = time.time()
+        user_data['today_rush_count'] = today_rush_count + 1
         self.main._save_niuniu_lengths()
 
-        yield event.plain_result(f"💪 {nickname} 芜湖！开冲！你暂时无法主动打胶或者比划！输入\"停止开冲\"来结束并结算金币。")
+        yield event.plain_result(f"💪 {nickname} 芜湖！开冲！输入\"停止开冲\"来结束并结算金币。")
 
     async def stop_rush(self, event: AstrMessageEvent):
         """停止开冲并结算金币"""
@@ -64,12 +80,11 @@ class NiuniuGames:
             yield event.plain_result(f"❌ {nickname} 至少冲够十分钟才能停")
             return
 
-        # 如果时间超过30分钟，按30分钟计算
-        work_time = min(work_time, 1800)  # 30分钟 = 1800秒
+        # 如果时间超过4小时，按4小时计算
+        work_time = min(work_time, 14400)  # 4小时 = 14400秒
 
-        # 动态计算金币奖励
-        coins_per_minute = random.randint(1, 2)
-        coins = int((work_time / 60) * coins_per_minute)
+        # 固定每分钟1个金币
+        coins = int(work_time / 60)
 
         # 更新用户金币
         user_data['coins'] = user_data.get('coins', 0) + coins
@@ -79,6 +94,7 @@ class NiuniuGames:
 
         # 重置状态
         user_data['is_rushing'] = False
+        user_data['last_rush_end_time'] = time.time()  # 记录本次冲结束时间
         self.main._save_niuniu_lengths()
 
     async def fly_plane(self, event: AstrMessageEvent):
