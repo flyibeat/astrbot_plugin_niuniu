@@ -535,42 +535,46 @@ class NiuniuPlugin(Star):
         compare_records[target_id] = current_time
         compare_records['count'] = compare_count + 1
 
-        # 检查是否持有夺心魔蝌蚪
-        if self.shop.get_user_items(group_id, user_id).get("夺心魔蝌蚪", 0) > 0:
-            if random.random() < 0.5:  # 50%的概率夺取对方全部长度
-                user_data['length'] += target_data['length']
+        # 检查是否持有夺心魔蝌蚪罐头
+        user_items = self.shop.get_user_items(group_id, user_id)
+        if user_items.get("夺心魔蝌蚪罐头", 0) > 0:
+            # 随机决定效果
+            effect_chance = random.random()
+            if effect_chance < 0.5:  # 50%的概率夺取对方全部长度
+                original_target_length = target_data['length']
+                user_data['length'] += original_target_length
                 target_data['length'] = 1
                 result_msg = [
                     "⚔️ 【牛牛对决结果】 ⚔️",
-                    f"🎉 {nickname} 使用夺心魔蝌蚪成功夺取了 {target_data['nickname']} 的全部长度！",
-                    f"🗡️ {nickname}: {self.format_length(user_data['length'] - target_data['length'])} > {self.format_length(user_data['length'])}",
-                    f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])} > 1cm"
+                    f"🎉 {nickname} 获得了夺心魔技能，夺取了 {target_data['nickname']} 的全部长度！",
+                    f"🗡️ {nickname}: {self.format_length(user_data['length'] - original_target_length)} → {self.format_length(user_data['length'])}",
+                    f"🛡️ {target_data['nickname']}: {self.format_length(original_target_length)} → 1cm"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪")
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
                 yield event.plain_result("\n".join(result_msg))
                 return
-            elif random.random() < 0.1:  # 10%的概率清空自己的长度
-                original_length = user_data['length']
+            elif effect_chance < 0.6:  # 10%的概率清空自己的长度
+                original_user_length = user_data['length']
                 user_data['length'] = 1
                 result_msg = [
                     "⚔️ 【牛牛对决结果】 ⚔️",
-                    f"💔 {nickname} 使用夺心魔蝌蚪失败，长度被清空！",
-                    f"🗡️ {nickname}: {self.format_length(original_length)} > 1cm",
+                    f"💔 {nickname} 使用夺心魔蝌蚪罐头，牛牛变成了夺心魔！！！",
+                    f"🗡️ {nickname}: {self.format_length(original_user_length)} → 1cm",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪")
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
                 yield event.plain_result("\n".join(result_msg))
                 return
             else:  # 40%的概率无效
                 result_msg = [
                     "⚔️ 【牛牛对决结果】 ⚔️",
-                    f"⚠️ {nickname} 使用夺心魔蝌蚪，但没有效果！",
+                    f"⚠️ {nickname} 使用夺心魔蝌蚪罐头，但是罐头好像坏掉了...",
                     f"🗡️ {nickname}: {self.format_length(user_data['length'])}",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪")
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
                 yield event.plain_result("\n".join(result_msg))
                 return
