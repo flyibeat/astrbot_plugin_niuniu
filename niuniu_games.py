@@ -25,17 +25,17 @@ class NiuniuGames:
             return
 
         # 检查冷却时间
-        last_rush_end_time = user_data.get('last_rush_end_time', 0)
-        current_time = time.time()
-        if current_time - last_rush_end_time < 1800:  # 30分钟冷却时间
-            remaining_time = 1800 - (current_time - last_rush_end_time)
-            mins = int(remaining_time // 60) + 1
-            yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
-            return
+        # last_rush_end_time = user_data.get('last_rush_end_time', 0)
+        # current_time = time.time()
+        # if current_time - last_rush_end_time < 1800:  # 30分钟冷却时间
+        #     remaining_time = 1800 - (current_time - last_rush_end_time)
+        #     mins = int(remaining_time // 60) + 1
+        #     yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
+        #     return
 
         # 检查今日已冲次数
         today_rush_count = user_data.get('today_rush_count', 0)
-        if today_rush_count > 3:
+        if today_rush_count > 6:
             yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
             return
 
