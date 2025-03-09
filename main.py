@@ -22,7 +22,7 @@ class NiuniuPlugin(Star):
     # 冷却时间常量（秒）
     COOLDOWN_10_MIN = 600    # 10分钟
     COOLDOWN_30_MIN = 1800   # 30分钟
-    COMPARE_COOLDOWN = 600   # 比划冷却
+    COMPARE_COOLDOWN = 300   # 比划冷却
     INVITE_LIMIT = 3         # 邀请次数限制
 
     def __init__(self, context: Context, config: dict = None):
@@ -528,7 +528,7 @@ class NiuniuPlugin(Star):
         compare_count = compare_records.get('count', 0)
 
         if compare_count >= 3:
-            yield event.plain_result("❌ 10分钟内只能比划三次")
+            yield event.plain_result("❌ 5分钟内只能比划三次")
             return
 
         # 更新冷却时间和比划次数
@@ -603,8 +603,8 @@ class NiuniuPlugin(Star):
 
         # 执行判定
         if random.random() < win_prob:
-            gain = random.randint(0, 3)
-            loss = random.randint(1, 2)
+            gain = random.randint(0, 10)
+            loss = random.randint(1, 9)
             user_data['length'] += gain
             target_data['length'] = max(1, target_data['length'] - loss)
             text = random.choice(self.niuniu_texts['compare']['win']).format(
@@ -638,8 +638,8 @@ class NiuniuPlugin(Star):
             if total_gain == 0:
                 text += f"\n{self.niuniu_texts['compare']['user_no_increase'].format(nickname=nickname)}"
         else:
-            gain = random.randint(0, 3)
-            loss = random.randint(1, 2)
+            gain = random.randint(0, 6)
+            loss = random.randint(1, 3)
             target_data['length'] += gain
             if self.shop.consume_item(group_id, user_id, "余震"):
                 result_msg = [f"🛡️ 【余震生效】{nickname} 未减少长度！"]
