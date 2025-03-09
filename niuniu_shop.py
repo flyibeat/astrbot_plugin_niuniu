@@ -13,7 +13,7 @@ class NiuniuShop:
         """加载商城配置"""
         default_config = [
             {
-                'id': 2,
+                'id': 1,
                 'name': "巴黎世家",
                 'type': 'active',
                 'desc': "💎 立即增加3点硬度",
@@ -21,7 +21,7 @@ class NiuniuShop:
                 'price': 50  
             },
             {
-                'id': 3,
+                'id': 2,
                 'name': "巴适得板生长素",
                 'type': 'active',
                 'desc': "立即增加20cm长度，但会减少2点硬度",
@@ -29,7 +29,7 @@ class NiuniuShop:
                 'price': 50 
             },
             {
-                'id': 1,
+                'id': 3,
                 'name': "妙脆角",
                 'type': 'passive', 
                 'max': 3, 
@@ -47,7 +47,7 @@ class NiuniuShop:
                 'price': 70
             },
             {
-                'id': 6,
+                'id': 5,
                 'name': "余震",
                 'type': 'passive',
                 'max': 3,
@@ -56,7 +56,7 @@ class NiuniuShop:
                 'price': 80  
             },
             {
-                'id': 5,
+                'id': 6,
                 'name': "不灭之握",
                 'type': 'active',
                 'desc': "直接增加30cm长度",
