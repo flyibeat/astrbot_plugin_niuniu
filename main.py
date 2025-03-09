@@ -296,17 +296,25 @@ class NiuniuPlugin(Star):
         elif msg.startswith("飞飞机"):
             async for result in self.games.fly_plane(event):
                 yield result
+        elif msg.startswith("我的牛牛"):
+            async for result in self._show_status(event):
+                yield result
+        elif msg.startswith("牛牛排行"):
+            async for result in self._show_ranking(event):
+                yield result
+        elif msg.startswith("牛牛商城"):
+            async for result in self.shop.show_shop(event):
+                yield result                
+        elif msg.startswith("牛牛背包"):
+            async for result in self.shop.show_items(event):
+                yield result
         else:
             # 处理其他命令
             handler_map = {
                 "注册牛牛": self._register,
-                "打胶": self._dajiao,
-                "我的牛牛": self._show_status,
-                "比划比划": self._compare,
-                "牛牛排行": self._show_ranking,
-                "牛牛商城": self.shop.show_shop,
-                "牛牛购买": self.shop.handle_buy,
-                "牛牛背包": self.shop.show_items
+                "打胶": self._dajiao,                
+                "比划比划": self._compare,               
+                "牛牛购买": self.shop.handle_buy
             }
 
             for cmd, handler in handler_map.items():
