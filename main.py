@@ -447,12 +447,12 @@ class NiuniuPlugin(Star):
                 template = random.choice(self.niuniu_texts['dajiao']['decrease'])
         else:  # 30分钟后
             rand = random.random()
-            if rand < 0.7:  # 70% 增加
+            if rand < 0.8:  # 80% 增加
                 change = random.randint(3, 6)
                 user_data['hardness'] = min(user_data['hardness'] + 1, 10)
-            elif rand < 0.9: # 20% 减少
-                change = -random.randint(1, 2)
-                template = random.choice(self.niuniu_texts['dajiao']['decrease_30min'])
+            # elif rand < 0.9: # 10% 减少
+            #     change = -random.randint(1, 1)
+            #     template = random.choice(self.niuniu_texts['dajiao']['decrease_30min'])
 
         # 应用变化
         user_data['length'] = max(1, user_data['length'] + change)
