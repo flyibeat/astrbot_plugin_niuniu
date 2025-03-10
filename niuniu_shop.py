@@ -51,7 +51,7 @@ class NiuniuShop:
                 'name': "余震",
                 'type': 'passive',
                 'max': 3,
-                'desc': "被比划时，如果失败，不扣长度",
+                'desc': "被比划时，如果失败，不扣长度，但无法防御夺心魔蝌蚪罐头",
                 'effect': 'no_deduct_on_fail',
                 'price': 80  
             },
