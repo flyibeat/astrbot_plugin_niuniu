@@ -33,18 +33,6 @@ class NiuniuGames:
         #     yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
         #     return
 
-        # 检查今日已冲次数
-        today_rush_count = user_data.get('today_rush_count', 0)
-        if today_rush_count > 6:
-            today_start = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, 0))
-            last_rush_start_time = user_data.get('rush_start_time', 0)
-            if today_start > last_rush_start_time:  #判断上次开冲是在昨天
-                user_data['today_rush_count'] = 0
-                today_rush_count = 0
-            else:
-                yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
-                return
-
         # 检查是否已经在冲
         if user_data.get('is_rushing', False):
             remaining_time = user_data['rush_start_time'] + 14400 - time.time()  # 4小时 = 14400秒
@@ -52,6 +40,21 @@ class NiuniuGames:
                 mins = int(remaining_time // 60) + 1
                 yield event.plain_result(f"⏳ {nickname} 你已经在冲了")
                 return
+                
+        # 检查开冲日期
+        last_rush_start_time = user_data.get('rush_start_time', 0)
+        today_start = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, 0))
+        if today_start > last_rush_start_time:  #判断上次开冲是在昨天
+            user_data['today_rush_count'] = 0
+            today_rush_count = 0
+            
+        # 检查今日已冲次数
+        today_rush_count = user_data.get('today_rush_count', 0)
+        if today_rush_count > 6:
+            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
+            return
+
+
 
         # 开始
         user_data['is_rushing'] = True
