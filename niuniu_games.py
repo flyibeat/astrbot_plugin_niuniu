@@ -38,7 +38,7 @@ class NiuniuGames:
             remaining_time = user_data['rush_start_time'] + 14400 - time.time()  # 4小时 = 14400秒
             if remaining_time > 0:
                 mins = int(remaining_time // 60) + 1
-                yield event.plain_result(f"⏳ {nickname} 你已经在冲了{mins}分钟")
+                yield event.plain_result(f"⏳ {nickname} 你已经在冲了，预计还剩{mins}分钟达到上限")
                 return
                 
         # 检查开冲日期
