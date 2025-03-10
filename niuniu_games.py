@@ -36,8 +36,14 @@ class NiuniuGames:
         # 检查今日已冲次数
         today_rush_count = user_data.get('today_rush_count', 0)
         if today_rush_count > 6:
-            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
-            return
+            today_start = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, 0))
+            last_rush_start_time = user_data.get('rush_start_time', 0)
+            if today_start > last_rush_start_time:  #判断上次开冲是在昨天
+                user_data['today_rush_count'] = 0
+                today_rush_count = 0
+            else:
+                yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
+                return
 
         # 检查是否已经在冲
         if user_data.get('is_rushing', False):
