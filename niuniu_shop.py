@@ -71,7 +71,7 @@ class NiuniuShop:
                 'quantity': 5,  
                 'desc': "短时间内多次打胶或比划，同时不受30分钟内连续打胶的debuff",
                 'effect': 'no_30min_debuff', 
-                'price': 100 
+                'price': 20 
             },
             {
                 'id': 8,
