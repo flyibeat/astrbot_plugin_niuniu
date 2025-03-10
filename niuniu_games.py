@@ -2,10 +2,13 @@ import random
 import time
 import yaml
 from astrbot.api.all import AstrMessageEvent
+import pytz
+from datetime import datetime
 
 class NiuniuGames:
     def __init__(self, main_plugin):
         self.main = main_plugin  # 主插件实例
+        self.shanghai_tz = pytz.timezone('Asia/Shanghai')  # 设置上海时区
 
     async def start_rush(self, event: AstrMessageEvent):
         """冲(咖啡)游戏"""
@@ -23,6 +26,17 @@ class NiuniuGames:
         if not user_data:
             yield event.plain_result("❌ 请先注册牛牛")
             return
+
+        # 检查是否需要重置today_rush_count
+        last_rush_end_time = user_data.get('last_rush_end_time', 0)
+        current_time = time.time()
+        # 获取上次开冲的日期和当前日期（基于上海时区）
+        last_rush_date = datetime.fromtimestamp(last_rush_end_time, self.shanghai_tz).strftime("%Y-%m-%d")
+        current_date = datetime.fromtimestamp(current_time, self.shanghai_tz).strftime("%Y-%m-%d")
+        if last_rush_date != current_date:
+            # 如果是新的一天，重置today_rush_count
+            user_data['today_rush_count'] = 0
+            self.main._save_niuniu_lengths()
 
         # 检查冷却时间
         last_rush_end_time = user_data.get('last_rush_end_time', 0)
@@ -50,7 +64,8 @@ class NiuniuGames:
         # 开始
         user_data['is_rushing'] = True
         user_data['rush_start_time'] = time.time()
-        user_data['today_rush_count'] = today_rush_count + 1
+        user_data['today_rush_count'] = user_data.get('today_rush_count', 0) + 1
+        user_data['last_rush_end_time'] = time.time()  # 更新为当前时间
         self.main._save_niuniu_lengths()
 
         yield event.plain_result(f"💪 {nickname} 芜湖！开冲！输入\"停止开冲\"来结束并结算金币。")
