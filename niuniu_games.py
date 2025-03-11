@@ -40,6 +40,9 @@ class NiuniuGames:
                 mins = int(remaining_time // 60) + 1
                 yield event.plain_result(f"⏳ {nickname} 你已经在冲了，预计还剩{mins}分钟达到上限")
                 return
+            else:
+                yield event.plain_result(f"⏳ {nickname} 你上一轮还未停止哦，请先停止开冲获取收益")
+                return
                 
         # 检查开冲日期
         last_rush_start_time = user_data.get('rush_start_time', 0)
