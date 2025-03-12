@@ -172,7 +172,7 @@ class NiuniuShop:
                     original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
                     user_data[effect_key] = original + effect_value
                     result_msg.append(f"✨ {effect_key}增加了{effect_value}")
-                    self._save_user_data(group_id, user_id, user_data)
+                self._save_user_data(group_id, user_id, user_data)
 
             # 扣除金币
             self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
