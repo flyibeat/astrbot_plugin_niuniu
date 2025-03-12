@@ -27,17 +27,22 @@ class NiuniuGames:
             yield event.plain_result("❌ 请先注册牛牛")
             return
 
-        # 检查是否需要重置today_rush_count
-        last_rush_end_time = user_data.get('last_rush_end_time', 0)
-        current_time = time.time()
-        # 获取上次开冲的日期和当前日期（基于上海时区）
-        last_rush_date = datetime.fromtimestamp(last_rush_end_time, self.shanghai_tz).strftime("%Y-%m-%d")
-        current_date = datetime.fromtimestamp(current_time, self.shanghai_tz).strftime("%Y-%m-%d")
-        if last_rush_date != current_date:
-            # 如果是新的一天，重置today_rush_count
-            user_data['today_rush_count'] = 0
-            self.main._save_niuniu_lengths()
 
+         # 获取当前日期（基于开冲时间）
+        current_time = time.time()
+        current_date = datetime.fromtimestamp(current_time, self.shanghai_tz).strftime("%Y-%m-%d")
+        # 检查是否需要重置今日次数
+        last_rush_start_date = user_data.get('last_rush_start_date', '')
+        if last_rush_start_date != current_date:
+            user_data['today_rush_count'] = 0
+            user_data['last_rush_start_date'] = current_date  # 更新为今日日期
+            self.main._save_niuniu_lengths()
+            
+        # 检查今日已冲次数
+        today_rush_count = user_data.get('today_rush_count', 0)
+        if today_rush_count >= 3:
+            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
+            return
         # 检查冷却时间
         last_rush_end_time = user_data.get('last_rush_end_time', 0)
         current_time = time.time()
@@ -45,12 +50,6 @@ class NiuniuGames:
             remaining_time = 1800 - (current_time - last_rush_end_time)
             mins = int(remaining_time // 60) + 1
             yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
-            return
-
-        # 检查今日已冲次数
-        today_rush_count = user_data.get('today_rush_count', 0)
-        if today_rush_count > 3:
-            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
             return
 
         # 检查是否已经在冲
@@ -61,11 +60,10 @@ class NiuniuGames:
                 yield event.plain_result(f"⏳ {nickname} 你已经在冲了")
                 return
 
-        # 开始
+        # 更新开冲状态
         user_data['is_rushing'] = True
-        user_data['rush_start_time'] = time.time()
-        user_data['today_rush_count'] = user_data.get('today_rush_count', 0) + 1
-        user_data['last_rush_end_time'] = time.time()  # 更新为当前时间
+        user_data['rush_start_time'] = current_time
+        user_data['today_rush_count'] += 1
         self.main._save_niuniu_lengths()
 
         yield event.plain_result(f"💪 {nickname} 芜湖！开冲！输入\"停止开冲\"来结束并结算金币。")
