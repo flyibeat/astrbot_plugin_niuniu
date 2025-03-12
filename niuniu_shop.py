@@ -217,7 +217,7 @@ class NiuniuShop:
         
     def _get_new_game_coins(self, group_id: str, user_id: str) -> float:
          """获取新游戏的金币"""
-         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
              return 0.0
  
@@ -228,7 +228,7 @@ class NiuniuShop:
  
      def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
          """更新新游戏的金币"""
-         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
              with open(user_data_path, 'w', encoding='utf-8') as f:
                  yaml.dump({}, f)
@@ -258,7 +258,7 @@ class NiuniuShop:
 
     def _get_user_data(self, group_id: str, user_id: str) -> Dict[str, Any]:
          """获取用户数据"""
-         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
              return {}
  
@@ -271,7 +271,7 @@ class NiuniuShop:
  
      def _save_user_data(self, group_id: str, user_id: str, user_data: Dict[str, Any]):
          """保存用户数据"""
-         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
              with open(user_data_path, 'w', encoding='utf-8') as f:
                  yaml.dump({}, f)
