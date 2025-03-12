@@ -51,7 +51,7 @@ class NiuniuShop:
                 'name': "余震",
                 'type': 'passive',
                 'max': 3,
-                'desc': "被比划时，如果失败，不扣长度，但无法防御夺心魔蝌蚪罐头",
+                'desc': "被比划时，如果失败，不扣长度",
                 'effect': 'no_deduct_on_fail',
                 'price': 80  
             },
@@ -71,7 +71,7 @@ class NiuniuShop:
                 'quantity': 5,  
                 'desc': "短时间内多次打胶或比划，同时不受30分钟内连续打胶的debuff",
                 'effect': 'no_30min_debuff', 
-                'price': 20 
+                'price': 100 
             },
             {
                 'id': 8,
@@ -135,7 +135,12 @@ class NiuniuShop:
 
         group_id = str(event.message_obj.group_id)
         user_id = str(event.get_sender_id())
-        
+        user_data = self.main.get_user_data(group_id, user_id)
+
+        # 初始化用户数据（兼容旧版）
+        user_data.setdefault('items', {})
+        user_data.setdefault('coins', 0)  # 添加金币字段的初始化
+
         # 获取用户金币
         user_coins = self.get_user_coins(group_id, user_id)
 
@@ -147,17 +152,13 @@ class NiuniuShop:
         try:
             result_msg = []
             if selected_item['type'] == 'passive':
-                user_data = self._get_user_data(group_id, user_id)
-                user_data.setdefault('items', {})
                 current = user_data['items'].get(selected_item['name'], 0)
                 if current >= selected_item.get('max', 3):
                     yield event.plain_result(f"⚠️ 已达到最大持有量（最大{selected_item['max']}个）")
                     return
                 user_data['items'][selected_item['name']] = current + 1
                 result_msg.append(f"📦 获得 {selected_item['name']}x1")
-                self._save_user_data(group_id, user_id, user_data)
             elif selected_item['type'] == 'active':
-                user_data = self._get_user_data(group_id, user_id)
                 if isinstance(selected_item['effect'], dict):
                     for effect_key, effect_value in selected_item['effect'].items():
                         original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
@@ -172,11 +173,11 @@ class NiuniuShop:
                     original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
                     user_data[effect_key] = original + effect_value
                     result_msg.append(f"✨ {effect_key}增加了{effect_value}")
-                self._save_user_data(group_id, user_id, user_data)
 
             # 扣除金币
             self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
-            self._save_user_data(group_id, user_id, user_data)
+
+            self.main._save_niuniu_lengths()
             yield event.plain_result("✅ 购买成功\n" + "\n".join(result_msg))
         
         except Exception as e:
@@ -209,98 +210,52 @@ class NiuniuShop:
         with open(sign_data_path, 'w', encoding='utf-8') as f:
             yaml.dump(sign_data, f, allow_unicode=True)
 
+    def get_new_game_coins(self, group_id: str, user_id: str) -> float:
+        """获取新游戏的金币"""
+        user_data = self.main.get_user_data(group_id, user_id)
+        return user_data.get('coins', 0) if user_data else 0
+
+    def update_new_game_coins(self, group_id: str, user_id: str, coins: float):
+        """更新新游戏的金币"""
+        user_data = self.main.get_user_data(group_id, user_id)
+        if user_data:
+            user_data['coins'] = coins
+            self.main._save_niuniu_lengths()
+
     def get_user_coins(self, group_id: str, user_id: str) -> float:
         """获取总金币"""
         sign_coins = self.get_sign_coins(group_id, user_id)
-        new_game_coins = self._get_new_game_coins(group_id, user_id)
+        new_game_coins = self.get_new_game_coins(group_id, user_id)
         return sign_coins + new_game_coins
-        
-    def _get_new_game_coins(self, group_id: str, user_id: str) -> float:
-         """获取新游戏的金币"""
-         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         if not os.path.exists(user_data_path):
-             return 0.0
- 
-         with open(user_data_path, 'r', encoding='utf-8') as f:
-             user_data = yaml.safe_load(f) or {}
- 
-         return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
- 
-    def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
-         """更新新游戏的金币"""
-         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         if not os.path.exists(user_data_path):
-             with open(user_data_path, 'w', encoding='utf-8') as f:
-                 yaml.dump({}, f)
- 
-         with open(user_data_path, 'r', encoding='utf-8') as f:
-             user_data = yaml.safe_load(f) or {}
- 
-         group_data = user_data.setdefault(group_id, {})
-         user_info = group_data.setdefault(user_id, {})
-         user_info['coins'] = coins
- 
-         with open(user_data_path, 'w', encoding='utf-8') as f:
-             yaml.dump(user_data, f, allow_unicode=True)
-             
+
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新总金币"""
         current_coins = self.get_user_coins(group_id, user_id)
-        new_game_coins = self._get_new_game_coins(group_id, user_id)
+        new_game_coins = self.get_new_game_coins(group_id, user_id)
         sign_coins = self.get_sign_coins(group_id, user_id)
 
         if new_game_coins >= current_coins - coins:
-            self._update_new_game_coins(group_id, user_id, new_game_coins - (current_coins - coins))
+            self.update_new_game_coins(group_id, user_id, new_game_coins - (current_coins - coins))
         else:
             remaining = (current_coins - coins) - new_game_coins
-            self._update_new_game_coins(group_id, user_id, 0)
+            self.update_new_game_coins(group_id, user_id, 0)
             self.update_sign_coins(group_id, user_id, sign_coins - remaining)
 
-    def _get_user_data(self, group_id: str, user_id: str) -> Dict[str, Any]:
-         """获取用户数据"""
-         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         if not os.path.exists(user_data_path):
-             return {}
- 
-         with open(user_data_path, 'r', encoding='utf-8') as f:
-             user_data = yaml.safe_load(f) or {}
- 
-         group_data = user_data.get(group_id, {})
-         user_info = group_data.get(user_id, {})
-         return user_info
- 
-    def _save_user_data(self, group_id: str, user_id: str, user_data: Dict[str, Any]):
-         """保存用户数据"""
-         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         if not os.path.exists(user_data_path):
-             with open(user_data_path, 'w', encoding='utf-8') as f:
-                 yaml.dump({}, f)
- 
-         with open(user_data_path, 'r', encoding='utf-8') as f:
-             data = yaml.safe_load(f) or {}
- 
-         group_data = data.setdefault(group_id, {})
-         group_data[user_id] = user_data
- 
-         with open(user_data_path, 'w', encoding='utf-8') as f:
-             yaml.dump(data, f, allow_unicode=True)
-             
     def get_user_items(self, group_id: str, user_id: str) -> Dict[str, int]:
         """获取用户道具"""
-        user_data = self._get_user_data(group_id, user_id)
+        user_data = self.main.get_user_data(group_id, user_id)
+        if user_data is None:
+            return {}
         return user_data.get('items', {})
 
     def consume_item(self, group_id: str, user_id: str, item_name: str) -> bool:
         """消耗道具返回是否成功"""
-        user_data = self._get_user_data(group_id, user_id)
-        items = user_data.get('items', {})
-    
-        if items.get(item_name, 0) > 0:
-            items[item_name] -= 1
-            if items[item_name] == 0:
-                del items[item_name]
-            user_data['items'] = items
-            self._save_user_data(group_id, user_id, user_data)
+        user_data = self.main.get_user_data(group_id, user_id)
+        if user_data['items'].get(item_name, 0) > 0:
+            user_data['items'][item_name] -= 1
+            if user_data['items'][item_name] == 0:
+                del user_data['items'][item_name]
+            self.main._save_niuniu_lengths()
             return True
         return False
 
@@ -318,7 +273,8 @@ class NiuniuShop:
                 # 使用 next() 函数时提供默认值 None
                 item_info = next((i for i in self.shop_items if i['name'] == name), None)
                 if item_info:
-                    result_list.append(f"🔹 {name}x{count} - {item_info['desc']}")                
+                    result_list.append(f"🔹 {name}x{count} - {item_info['desc']}")
+                # 如果找不到道具信息，不添加任何内容
         else:
             result_list.append("🛍️ 你的背包里还没有道具哦~")
         
