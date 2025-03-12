@@ -226,7 +226,7 @@ class NiuniuShop:
  
          return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
  
-     def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
+    def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
          """更新新游戏的金币"""
          user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
@@ -269,7 +269,7 @@ class NiuniuShop:
          user_info = group_data.get(user_id, {})
          return user_info
  
-     def _save_user_data(self, group_id: str, user_id: str, user_data: Dict[str, Any]):
+    def _save_user_data(self, group_id: str, user_id: str, user_data: Dict[str, Any]):
          """保存用户数据"""
          user_data_path = os.path.join('data', 'niuniu_lengths.yml')
          if not os.path.exists(user_data_path):
