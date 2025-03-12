@@ -176,7 +176,7 @@ class NiuniuShop:
 
             # 扣除金币
             self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
-            
+            self._save_user_data(group_id, user_id, user_data)
             yield event.plain_result("✅ 购买成功\n" + "\n".join(result_msg))
         
         except Exception as e:
