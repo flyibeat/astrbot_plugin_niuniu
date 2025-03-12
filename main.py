@@ -631,7 +631,7 @@ class NiuniuPlugin(Star):
                 self.shop.consume_item(group_id, user_id, "淬火爪刀")  
 
             if abs(u_len - t_len) >= 20 and user_data['hardness'] < target_data['hardness']:
-                extra_gain = random.randint(0, 5)
+                extra_gain = random.randint(3, 8)
                 user_data['length'] += extra_gain
                 total_gain += extra_gain
                 text += f"\n🎁 由于极大劣势获胜，额外增加 {extra_gain}cm！"
