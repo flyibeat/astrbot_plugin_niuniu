@@ -96,7 +96,7 @@ class NiuniuGames:
         work_time = min(work_time, 7200)  # 2小时 = 7200秒
 
         # 固定每分钟1个金币
-        coins = int(work_time / 60)
+        coins = int(work_time / 60) * 4
 
         # 更新用户金币
         user_data['coins'] = user_data.get('coins', 0) + coins
