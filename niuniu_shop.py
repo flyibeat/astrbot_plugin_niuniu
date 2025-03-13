@@ -119,6 +119,114 @@ class NiuniuShop:
             shop_list.append(f"{item['id']}. {item['name']} - {item['desc']} (价格: {item['price']} 金币)")
         yield event.plain_result("\n".join(shop_list))
 
+    async def handle_buy(self, event: AstrMessageEvent):    
+        """处理购买命令"""
+        msg_parts = event.message_str.split()
+        if len(msg_parts) < 2 or not msg_parts[1].isdigit():
+            yield event.plain_result("❌ 格式：牛牛购买 商品编号\n例：牛牛购买 1")
+            return
+
+        item_id = int(msg_parts[1])
+        selected_item = next((i for i in self.shop_items if i['id'] == item_id), None)
+        
+        if not selected_item:
+            yield event.plain_result("❌ 无效的商品编号")
+            return
+
+        group_id = str(event.message_obj.group_id)
+        user_id = str(event.get_sender_id())
+
+        # 获取用户金币
+        user_coins = self.get_user_coins(group_id, user_id)
+
+        # 检查用户是否有足够的金币
+        if user_coins < selected_item['price']:
+            yield event.plain_result("❌ 金币不足，无法购买")
+            return
+
+        try:
+            result_msg = []
+            if selected_item['type'] == 'passive':
+                user_data = self._get_user_data(group_id, user_id)
+                user_data.setdefault('items', {})
+                current = user_data['items'].get(selected_item['name'], 0)
+                if current >= selected_item.get('max', 3):
+                    yield event.plain_result(f"⚠️ 已达到最大持有量（最大{selected_item['max']}个）")
+                    return
+                user_data['items'][selected_item['name']] = current + 1
+                result_msg.append(f"📦 获得 {selected_item['name']}x1")
+                self._save_user_data(group_id, user_id, user_data)
+            elif selected_item['type'] == 'active':
+                user_data = self._get_user_data(group_id, user_id)
+                if isinstance(selected_item['effect'], dict):
+                    for effect_key, effect_value in selected_item['effect'].items():
+                        original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
+                        user_data[effect_key] = original + effect_value
+                        if effect_value >= 0:
+                            result_msg.append(f"✨ {effect_key}增加了{effect_value}")
+                        else:
+                            result_msg.append(f"✨ {effect_key}减少了{-effect_value}")
+                else:
+                    effect_key = selected_item['effect']
+                    effect_value = 1  # 默认值，可以根据实际需求调整
+                    original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
+                    user_data[effect_key] = original + effect_value
+                    result_msg.append(f"✨ {effect_key}增加了{effect_value}")
+                self._save_user_data(group_id, user_id, user_data)
+
+            # 扣除金币
+            self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
+
+            yield event.plain_result("✅ 购买成功\n" + "\n".join(result_msg))
+        
+        except Exception as e:
+            self.main.context.logger.error(f"购买错误: {str(e)}")
+            yield event.plain_result("⚠️ 购买过程中出现错误，请稍后再试")
+
+    def get_sign_coins(self, group_id: str, user_id: str) -> float:
+        """获取签到插件的金币"""
+        sign_data_path = os.path.join('data', 'sign_data.yml')
+        if not os.path.exists(sign_data_path):
+            return 0.0
+
+        with open(sign_data_path, 'r', encoding='utf-8') as f:
+            sign_data = yaml.safe_load(f) or {}
+
+        return sign_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
+
+    def update_sign_coins(self, group_id: str, user_id: str, coins: float):
+        """更新签到插件的金币"""
+        sign_data_path = os.path.join('data', 'sign_data.yml')
+        if not os.path.exists(sign_data_path):
+            with open(sign_data_path, 'w', encoding='utf-8') as f:
+                yaml.dump({}, f)
+
+        with open(sign_data_path, 'r', encoding='utf-8') as f:
+            sign_data = yaml.safe_load(f) or {}
+
+        user_data = sign_data.setdefault(group_id, {}).setdefault(user_id, {})
+        user_data['coins'] = coins
+
+        with open(sign_data_path, 'w', encoding='utf-8') as f:
+            yaml.dump(sign_data, f, allow_unicode=True)
+
+    def get_user_coins(self, group_id: str, user_id: str) -> float:
+        """获取总金币"""
+        sign_coins = self.get_sign_coins(group_id, user_id)
+        new_game_coins = self._get_new_game_coins(group_id, user_id)
+        return sign_coins + new_game_coins
+
+    def _get_new_game_coins(self, group_id: str, user_id: str) -> float:
+        """获取牛牛游戏的金币"""
+        user_data_path = os.path.join('data', 'niuniu_lengths.yml')
+        if not os.path.exists(user_data_path):
+            return 0.0
+
+        with open(user_data_path, 'r', encoding='utf-8') as f:
+            user_data = yaml.safe_load(f) or {}
+
+        return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
+
     async def handle_buy(self, event: AstrMessageEvent):
         """处理购买命令"""
         msg_parts = event.message_str.split()
@@ -180,54 +288,11 @@ class NiuniuShop:
             yield event.plain_result("✅ 购买成功\n" + "\n".join(result_msg))
         
         except Exception as e:
+            print(f"购买错误: {str(e)}")
             yield event.plain_result("⚠️ 购买过程中出现错误，请稍后再试")
 
-    def get_sign_coins(self, group_id: str, user_id: str) -> float:
-        """获取签到插件的金币"""
-        sign_data_path = os.path.join('data', 'sign_data.yml')
-        if not os.path.exists(sign_data_path):
-            return 0.0
-
-        with open(sign_data_path, 'r', encoding='utf-8') as f:
-            sign_data = yaml.safe_load(f) or {}
-
-        return sign_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
-
-    def update_sign_coins(self, group_id: str, user_id: str, coins: float):
-        """更新签到插件的金币"""
-        sign_data_path = os.path.join('data', 'sign_data.yml')
-        if not os.path.exists(sign_data_path):
-            with open(sign_data_path, 'w', encoding='utf-8') as f:
-                yaml.dump({}, f)
-
-        with open(sign_data_path, 'r', encoding='utf-8') as f:
-            sign_data = yaml.safe_load(f) or {}
-
-        user_data = sign_data.setdefault(group_id, {}).setdefault(user_id, {})
-        user_data['coins'] = coins
-
-        with open(sign_data_path, 'w', encoding='utf-8') as f:
-            yaml.dump(sign_data, f, allow_unicode=True)
-
-    def get_user_coins(self, group_id: str, user_id: str) -> float:
-        """获取总金币"""
-        sign_coins = self.get_sign_coins(group_id, user_id)
-        new_game_coins = self._get_new_game_coins(group_id, user_id)
-        return sign_coins + new_game_coins
-
-    def _get_new_game_coins(self, group_id: str, user_id: str) -> float:
-        """获取新游戏的金币"""
-        user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-        if not os.path.exists(user_data_path):
-            return 0.0
-
-        with open(user_data_path, 'r', encoding='utf-8') as f:
-            user_data = yaml.safe_load(f) or {}
-
-        return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
-
     def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
-        """更新新游戏的金币"""
+        """更新牛牛游戏的金币"""
         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
         if not os.path.exists(user_data_path):
             with open(user_data_path, 'w', encoding='utf-8') as f:
@@ -240,8 +305,8 @@ class NiuniuShop:
         user_info = group_data.setdefault(user_id, {})
         user_info['coins'] = coins
 
-        with open(user_data_path, 'w', encoding='utf-8') as f:
-            yaml.dump(user_data, f, allow_unicode=True)
+        # 调用 main 中的 _save_niuniu_lengths 方法保存数据
+        self.main._save_niuniu_lengths()
 
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新总金币"""
