@@ -158,6 +158,7 @@ class NiuniuShop:
                     return
                 user_data['items'][selected_item['name']] = current + 1
                 result_msg.append(f"📦 获得 {selected_item['name']}x1")
+                self.main._save_niuniu_lengths()
             elif selected_item['type'] == 'active':
                 if isinstance(selected_item['effect'], dict):
                     for effect_key, effect_value in selected_item['effect'].items():
@@ -167,12 +168,15 @@ class NiuniuShop:
                             result_msg.append(f"✨ {effect_key}增加了{effect_value}")
                         else:
                             result_msg.append(f"✨ {effect_key}减少了{-effect_value}")
+                        self.main._save_niuniu_lengths()
+                
                 else:
                     effect_key = selected_item['effect']
                     effect_value = 1  # 默认值，可以根据实际需求调整
                     original = user_data.get(effect_key, 1 if effect_key == 'hardness' else 10)
                     user_data[effect_key] = original + effect_value
                     result_msg.append(f"✨ {effect_key}增加了{effect_value}")
+                    self.main._save_niuniu_lengths()
 
             # 扣除金币
             self.update_user_coins(group_id, user_id, user_coins - selected_item['price'])
@@ -229,20 +233,25 @@ class NiuniuShop:
  
     def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
          """更新新游戏的金币"""
-         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         if not os.path.exists(user_data_path):
-             with open(user_data_path, 'w', encoding='utf-8') as f:
-                 yaml.dump({}, f)
+         # user_data_path = os.path.join('data', 'niuniu_lengths.yml')
+         # if not os.path.exists(user_data_path):
+         #     with open(user_data_path, 'w', encoding='utf-8') as f:
+         #         yaml.dump({}, f)
  
-         with open(user_data_path, 'r', encoding='utf-8') as f:
-             user_data = yaml.safe_load(f) or {}
+         # with open(user_data_path, 'r', encoding='utf-8') as f:
+         #     user_data = yaml.safe_load(f) or {}
  
-         group_data = user_data.setdefault(group_id, {})
-         user_info = group_data.setdefault(user_id, {})
-         user_info['coins'] = coins
+         # group_data = user_data.setdefault(group_id, {})
+         # user_info = group_data.setdefault(user_id, {})
+         # user_info['coins'] = coins
  
-         with open(user_data_path, 'w', encoding='utf-8') as f:
-             yaml.dump(user_data, f, allow_unicode=True)
+         # with open(user_data_path, 'w', encoding='utf-8') as f:
+         #     yaml.dump(user_data, f, allow_unicode=True)
+             
+         user_data = self.main.get_user_data(group_id, user_id)
+         user_data['coins'] = coins
+         self.main._save_niuniu_lengths()
+         
              
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新总金币"""
