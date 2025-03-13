@@ -210,35 +210,51 @@ class NiuniuShop:
         with open(sign_data_path, 'w', encoding='utf-8') as f:
             yaml.dump(sign_data, f, allow_unicode=True)
 
-    def get_new_game_coins(self, group_id: str, user_id: str) -> float:
-        """获取新游戏的金币"""
-        user_data = self.main.get_user_data(group_id, user_id)
-        return user_data.get('coins', 0) if user_data else 0
-
-    def update_new_game_coins(self, group_id: str, user_id: str, coins: float):
-        """更新新游戏的金币"""
-        user_data = self.main.get_user_data(group_id, user_id)
-        if user_data:
-            user_data['coins'] = coins
-            self.main._save_niuniu_lengths()
-
     def get_user_coins(self, group_id: str, user_id: str) -> float:
         """获取总金币"""
         sign_coins = self.get_sign_coins(group_id, user_id)
-        new_game_coins = self.get_new_game_coins(group_id, user_id)
+        new_game_coins = self._get_new_game_coins(group_id, user_id)
         return sign_coins + new_game_coins
-
+        
+    def _get_new_game_coins(self, group_id: str, user_id: str) -> float:
+         """获取新游戏的金币"""
+         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         if not os.path.exists(user_data_path):
+             return 0.0
+ 
+         with open(user_data_path, 'r', encoding='utf-8') as f:
+             user_data = yaml.safe_load(f) or {}
+ 
+         return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
+ 
+    def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
+         """更新新游戏的金币"""
+         user_data_path = os.path.join('data', 'niuniu_data.yml')
+         if not os.path.exists(user_data_path):
+             with open(user_data_path, 'w', encoding='utf-8') as f:
+                 yaml.dump({}, f)
+ 
+         with open(user_data_path, 'r', encoding='utf-8') as f:
+             user_data = yaml.safe_load(f) or {}
+ 
+         group_data = user_data.setdefault(group_id, {})
+         user_info = group_data.setdefault(user_id, {})
+         user_info['coins'] = coins
+ 
+         with open(user_data_path, 'w', encoding='utf-8') as f:
+             yaml.dump(user_data, f, allow_unicode=True)
+             
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新总金币"""
         current_coins = self.get_user_coins(group_id, user_id)
-        new_game_coins = self.get_new_game_coins(group_id, user_id)
+        new_game_coins = self._get_new_game_coins(group_id, user_id)
         sign_coins = self.get_sign_coins(group_id, user_id)
 
         if new_game_coins >= current_coins - coins:
-            self.update_new_game_coins(group_id, user_id, new_game_coins - (current_coins - coins))
+            self._update_new_game_coins(group_id, user_id, new_game_coins - (current_coins - coins))
         else:
             remaining = (current_coins - coins) - new_game_coins
-            self.update_new_game_coins(group_id, user_id, 0)
+            self._update_new_game_coins(group_id, user_id, 0)
             self.update_sign_coins(group_id, user_id, sign_coins - remaining)
 
     def get_user_items(self, group_id: str, user_id: str) -> Dict[str, int]:
