@@ -233,23 +233,18 @@ class NiuniuShop:
  
     def _update_new_game_coins(self, group_id: str, user_id: str, coins: float):
          """更新新游戏的金币"""
-         # user_data_path = os.path.join('data', 'niuniu_lengths.yml')
-         # if not os.path.exists(user_data_path):
-         #     with open(user_data_path, 'w', encoding='utf-8') as f:
-         #         yaml.dump({}, f)
+         user_data_path = os.path.join('data', 'niuniu_lengths.yml')
+         if not os.path.exists(user_data_path):
+             with open(user_data_path, 'w', encoding='utf-8') as f:
+                 yaml.dump({}, f)
  
-         # with open(user_data_path, 'r', encoding='utf-8') as f:
-         #     user_data = yaml.safe_load(f) or {}
+         with open(user_data_path, 'r', encoding='utf-8') as f:
+             user_data = yaml.safe_load(f) or {}
  
-         # group_data = user_data.setdefault(group_id, {})
-         # user_info = group_data.setdefault(user_id, {})
-         # user_info['coins'] = coins
- 
-         # with open(user_data_path, 'w', encoding='utf-8') as f:
-         #     yaml.dump(user_data, f, allow_unicode=True)
-             
-         user_data = self.main.get_user_data(group_id, user_id)
-         user_data['coins'] = coins
+         group_data = user_data.setdefault(group_id, {})
+         user_info = group_data.setdefault(user_id, {})
+         user_info['coins'] = coins                  
+         
          self.main._save_niuniu_lengths()
          
              
