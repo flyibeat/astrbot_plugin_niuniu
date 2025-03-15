@@ -227,13 +227,6 @@ class NiuniuShop:
 
         return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
 
-    async def handle_buy(self, event: AstrMessageEvent):
-        """处理购买命令"""
-        msg_parts = event.message_str.split()
-        if len(msg_parts) < 2 or not msg_parts[1].isdigit():
-            yield event.plain_result("❌ 格式：牛牛购买 商品编号\n例：牛牛购买 1")
-            return
-
         item_id = int(msg_parts[1])
         selected_item = next((i for i in self.shop_items if i['id'] == item_id), None)
         
