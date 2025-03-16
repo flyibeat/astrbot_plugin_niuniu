@@ -4,11 +4,22 @@ import yaml
 from astrbot.api.all import AstrMessageEvent
 import pytz
 from datetime import datetime
+import os
 
 class NiuniuGames:
     def __init__(self, main_plugin):
         self.main = main_plugin  # 主插件实例
         self.shanghai_tz = pytz.timezone('Asia/Shanghai')  # 设置上海时区
+        self.data_file = os.path.join('data', 'niuniu_lengths.yml')
+    def load_data(self):
+        """从 YAML 文件加载数据"""
+        with open(self.data_file, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f) or {}
+
+    def save_data(self, data):
+        """将数据保存到 YAML 文件"""
+        with open(self.data_file, 'w', encoding='utf-8') as f:
+            yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
 
     async def start_rush(self, event: AstrMessageEvent):
         """冲(咖啡)游戏"""
@@ -17,18 +28,19 @@ class NiuniuGames:
         nickname = event.get_sender_name()
 
         # 检查插件是否启用
-        if not self.main.get_group_data(group_id).get('plugin_enabled', False):
+        data = self.load_data()
+        group_data = data.get(group_id, {})
+        if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
 
         # 获取用户数据
-        user_data = self.main.get_user_data(group_id, user_id)
+        user_data = data.get(group_id, {}).get(user_id, {})
         if not user_data:
             yield event.plain_result("❌ 请先注册牛牛")
             return
 
-
-         # 获取当前日期（基于开冲时间）
+        # 获取当前日期（基于开冲时间）
         current_time = time.time()
         current_date = datetime.fromtimestamp(current_time, self.shanghai_tz).strftime("%Y-%m-%d")
         # 检查是否需要重置今日次数
@@ -36,13 +48,13 @@ class NiuniuGames:
         if last_rush_start_date != current_date:
             user_data['today_rush_count'] = 0
             user_data['last_rush_start_date'] = current_date  # 更新为今日日期
-            self.main._save_niuniu_lengths()
-            
+
         # 检查今日已冲次数
         today_rush_count = user_data.get('today_rush_count', 0)
         if today_rush_count >= 3:
             yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
             return
+
         # 检查冷却时间
         last_rush_end_time = user_data.get('last_rush_end_time', 0)
         current_time = time.time()
@@ -64,7 +76,11 @@ class NiuniuGames:
         user_data['is_rushing'] = True
         user_data['rush_start_time'] = current_time
         user_data['today_rush_count'] += 1
-        self.main._save_niuniu_lengths()
+
+        # 保存数据
+        data[group_id] = data.get(group_id, {})
+        data[group_id][user_id] = user_data
+        self.save_data(data)
 
         yield event.plain_result(f"💪 {nickname} 芜湖！开冲！输入\"停止开冲\"来结束并结算金币。")
 
@@ -75,7 +91,8 @@ class NiuniuGames:
         nickname = event.get_sender_name()
 
         # 获取用户数据
-        user_data = self.main.get_user_data(group_id, user_id)
+        data = self.load_data()
+        user_data = data.get(group_id, {}).get(user_id, {})
         if not user_data:
             yield event.plain_result("❌ 请先注册牛牛")
             return
@@ -101,14 +118,20 @@ class NiuniuGames:
 
         # 更新用户金币
         user_data['coins'] = user_data.get('coins', 0) + coins
-        self.main._save_niuniu_lengths()
+
+        # 保存数据
+        data[group_id][user_id] = user_data
+        self.save_data(data)
 
         yield event.plain_result(f"🎉 {nickname} 总算冲够了！你获得了 {coins} 金币！")
 
         # 重置状态
         user_data['is_rushing'] = False
         user_data['last_rush_end_time'] = time.time()  # 记录本次冲结束时间
-        self.main._save_niuniu_lengths()
+
+        # 保存数据
+        data[group_id][user_id] = user_data
+        self.save_data(data)
 
     async def fly_plane(self, event: AstrMessageEvent):
         """飞机游戏"""
@@ -117,12 +140,14 @@ class NiuniuGames:
         nickname = event.get_sender_name()
 
         # 检查插件是否启用
-        if not self.main.get_group_data(group_id).get('plugin_enabled', False):
+        data = self.load_data()
+        group_data = data.get(group_id, {})
+        if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
 
         # 获取用户数据
-        user_data = self.main.get_user_data(group_id, user_id)
+        user_data = data.get(group_id, {}).get(user_id, {})
         if not user_data:
             yield event.plain_result("❌ 请先注册牛牛")
             return
@@ -153,18 +178,24 @@ class NiuniuGames:
         # 更新用户金币
         user_data['coins'] = user_data.get('coins', 0) + coins
         user_data['last_fly_time'] = current_time
-        self.main._save_niuniu_lengths()
+
+        # 保存数据
+        data[group_id][user_id] = user_data
+        self.save_data(data)
 
         yield event.plain_result(f"🎉 {nickname} {description}！你获得了 {coins} 金币！")
 
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新用户金币"""
-        user_data = self.main.get_user_data(group_id, user_id)
+        data = self.load_data()
+        user_data = data.get(group_id, {}).get(user_id, {})
         if user_data:
             user_data['coins'] = user_data.get('coins', 0) + coins
-            self.main._save_niuniu_lengths()
+            data[group_id][user_id] = user_data
+            self.save_data(data)
 
     def get_user_coins(self, group_id: str, user_id: str) -> float:
         """获取用户金币"""
-        user_data = self.main.get_user_data(group_id, user_id)
+        data = self.load_data()
+        user_data = data.get(group_id, {}).get(user_id, {})
         return user_data.get('coins', 0) if user_data else 0
