@@ -227,6 +227,13 @@ class NiuniuShop:
 
         return user_data.get(group_id, {}).get(user_id, {}).get('coins', 0.0)
 
+    async def handle_buy(self, event: AstrMessageEvent):
+        """处理购买命令"""
+        msg_parts = event.message_str.split()
+        if len(msg_parts) < 2 or not msg_parts[1].isdigit():
+            yield event.plain_result("❌ 格式：牛牛购买 商品编号\n例：牛牛购买 1")
+            return
+
         item_id = int(msg_parts[1])
         selected_item = next((i for i in self.shop_items if i['id'] == item_id), None)
         
@@ -298,8 +305,9 @@ class NiuniuShop:
         user_info = group_data.setdefault(user_id, {})
         user_info['coins'] = coins
 
-        # 调用 main 中的 _save_niuniu_lengths 方法保存数据
-        self.main._save_niuniu_lengths()
+        with open(user_data_path, 'w', encoding='utf-8') as f:
+            yaml.dump(user_data, f, allow_unicode=True)
+
 
     def update_user_coins(self, group_id: str, user_id: str, coins: float):
         """更新总金币"""
