@@ -355,7 +355,7 @@ class NiuniuPlugin(Star):
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
 
-        group_data = self.get_group_data(group_id)
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
@@ -373,6 +373,7 @@ class NiuniuPlugin(Star):
             'coins': 0,
             'items': {}
         }
+        self.niuniu_lengths[group_id] = group_data
         self._save_niuniu_lengths()
 
         text = self.niuniu_texts['register']['success'].format(
@@ -388,7 +389,7 @@ class NiuniuPlugin(Star):
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
 
-        group_data = self.get_group_data(group_id)
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
@@ -475,7 +476,7 @@ class NiuniuPlugin(Star):
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
 
-        group_data = self.get_group_data(group_id)
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
@@ -724,12 +725,12 @@ class NiuniuPlugin(Star):
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
 
-        group_data = self.get_group_data(group_id)
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
 
-        user_data = self.get_user_data(group_id, user_id)
+        user_data = group_data.get(user_id)
         if not user_data:
             yield event.plain_result(self.niuniu_texts['my_niuniu']['not_registered'].format(nickname=nickname))
             return
@@ -760,8 +761,7 @@ class NiuniuPlugin(Star):
     async def _show_ranking(self, event):
         """显示排行榜"""
         group_id = str(event.message_obj.group_id)
-        group_data = self.get_group_data(group_id)
-
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
             yield event.plain_result("❌ 插件未启用")
             return
