@@ -22,7 +22,7 @@ class NiuniuPlugin(Star):
     # 冷却时间常量（秒）
     COOLDOWN_10_MIN = 600    # 10分钟
     COOLDOWN_30_MIN = 1800   # 30分钟
-    COMPARE_COOLDOWN = 600   # 比划冷却
+    COMPARE_COOLDOWN = 300   # 比划冷却
     INVITE_LIMIT = 3         # 邀请次数限制
 
     def __init__(self, context: Context, config: dict = None):
@@ -296,17 +296,29 @@ class NiuniuPlugin(Star):
         elif msg.startswith("飞飞机"):
             async for result in self.games.fly_plane(event):
                 yield result
+        elif msg.startswith("我的牛牛"):
+            async for result in self._show_status(event):
+                yield result
+        elif msg.startswith("牛牛排行"):
+            async for result in self._show_ranking(event):
+                yield result
+        elif msg.startswith("牛牛商城"):
+            async for result in self.shop.show_shop(event):
+                yield result                
+        elif msg.startswith("牛牛背包"):
+            async for result in self.shop.show_items(event):
+                yield result                
         else:
             # 处理其他命令
             handler_map = {
                 "注册牛牛": self._register,
                 "打胶": self._dajiao,
-                "我的牛牛": self._show_status,
+                # "我的牛牛": self._show_status,
                 "比划比划": self._compare,
-                "牛牛排行": self._show_ranking,
-                "牛牛商城": self.shop.show_shop,
+                # "牛牛排行": self._show_ranking,
+                # "牛牛商城": self.shop.show_shop,
                 "牛牛购买": self.shop.handle_buy,
-                "牛牛背包": self.shop.show_items
+                # "牛牛背包": self.shop.show_items
             }
 
             for cmd, handler in handler_map.items():
@@ -440,12 +452,12 @@ class NiuniuPlugin(Star):
                 template = random.choice(self.niuniu_texts['dajiao']['decrease'])
         else:  # 30分钟后
             rand = random.random()
-            if rand < 0.7:  # 70% 增加
+            if rand < 0.8:  # 80% 增加
                 change = random.randint(3, 6)
                 user_data['hardness'] = min(user_data['hardness'] + 1, 10)
-            elif rand < 0.9: # 20% 减少
-                change = -random.randint(1, 2)
-                template = random.choice(self.niuniu_texts['dajiao']['decrease_30min'])
+            # elif rand < 0.9: # 10% 减少
+            #     change = -random.randint(1, 1)
+            #     template = random.choice(self.niuniu_texts['dajiao']['decrease_30min'])
 
         # 应用变化
         user_data['length'] = max(1, user_data['length'] + change)
@@ -529,7 +541,7 @@ class NiuniuPlugin(Star):
         compare_count = compare_records.get('count', 0)
 
         if compare_count >= 3:
-            yield event.plain_result("❌ 10分钟内只能比划三次")
+            yield event.plain_result("❌ 5分钟内只能比划三次")
             return
 
         # 更新冷却时间和比划次数
@@ -604,8 +616,8 @@ class NiuniuPlugin(Star):
 
         # 执行判定
         if random.random() < win_prob:
-            gain = random.randint(0, 3)
-            loss = random.randint(1, 2)
+            gain = random.randint(0, 10)
+            loss = random.randint(1, 9)
             user_data['length'] += gain
             target_data['length'] = max(1, target_data['length'] - loss)
             text = random.choice(self.niuniu_texts['compare']['win']).format(
@@ -624,7 +636,7 @@ class NiuniuPlugin(Star):
                 self.shop.consume_item(group_id, user_id, "淬火爪刀")  
 
             if abs(u_len - t_len) >= 20 and user_data['hardness'] < target_data['hardness']:
-                extra_gain = random.randint(0, 5)
+                extra_gain = random.randint(3, 8)
                 user_data['length'] += extra_gain
                 total_gain += extra_gain
                 text += f"\n🎁 由于极大劣势获胜，额外增加 {extra_gain}cm！"
@@ -639,8 +651,8 @@ class NiuniuPlugin(Star):
             if total_gain == 0:
                 text += f"\n{self.niuniu_texts['compare']['user_no_increase'].format(nickname=nickname)}"
         else:
-            gain = random.randint(0, 3)
-            loss = random.randint(1, 2)
+            gain = random.randint(0, 6)
+            loss = random.randint(1, 3)
             target_data['length'] += gain
             if self.shop.consume_item(group_id, user_id, "余震"):
                 result_msg = [f"🛡️ 【余震生效】{nickname} 未减少长度！"]
