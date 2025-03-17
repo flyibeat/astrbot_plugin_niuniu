@@ -56,22 +56,25 @@ class NiuniuGames:
             return
 
         # 检查冷却时间
-        last_rush_end_time = user_data.get('last_rush_end_time', 0)
-        current_time = time.time()
-        if current_time - last_rush_end_time < 1800:  # 30分钟冷却时间
-            remaining_time = 1800 - (current_time - last_rush_end_time)
-            mins = int(remaining_time // 60) + 1
-            yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
-            return
+        # last_rush_end_time = user_data.get('last_rush_end_time', 0)
+        # current_time = time.time()
+        # if current_time - last_rush_end_time < 1800:  # 30分钟冷却时间
+        #     remaining_time = 1800 - (current_time - last_rush_end_time)
+        #     mins = int(remaining_time // 60) + 1
+        #     yield event.plain_result(f"⏳ {nickname} 牛牛冲累了，休息{mins}分钟再冲吧")
+        #     return
 
         # 检查是否已经在冲
         if user_data.get('is_rushing', False):
-            remaining_time = user_data['rush_start_time'] + 14400 - time.time()  # 4小时 = 14400秒
+            remaining_time = user_data['rush_start_time'] + 7200 - time.time()  # 2小时 = 7200秒
             if remaining_time > 0:
                 mins = int(remaining_time // 60) + 1
-                yield event.plain_result(f"⏳ {nickname} 你已经在冲了")
+                yield event.plain_result(f"⏳ {nickname} 你已经在冲了，预计还剩{mins}分钟达到上限")
                 return
-
+            else:
+                yield event.plain_result(f"⏳ {nickname} 你上一轮还未停止哦，请先停止开冲获取收益")
+                return
+                
         # 更新开冲状态
         user_data['is_rushing'] = True
         user_data['rush_start_time'] = current_time
@@ -110,11 +113,11 @@ class NiuniuGames:
             yield event.plain_result(f"❌ {nickname} 至少冲够十分钟才能停")
             return
 
-        # 如果时间超过4小时，按4小时计算
-        work_time = min(work_time, 14400)  # 4小时 = 14400秒
+        # 如果时间超过2小时，按2小时计算
+        work_time = min(work_time, 7200)  # 2小时 = 7200秒
 
         # 固定每分钟1个金币
-        coins = int(work_time / 60)
+        coins = int(work_time / 60) * 4
 
         # 更新用户金币
         user_data['coins'] = user_data.get('coins', 0) + coins
@@ -155,8 +158,8 @@ class NiuniuGames:
         # 检查冷却时间
         last_fly_time = user_data.get('last_fly_time', 0)
         current_time = time.time()
-        if current_time - last_fly_time < 14400:  # 4小时
-            remaining_time = 14400 - (current_time - last_fly_time)
+        if current_time - last_fly_time < 7200:  # 2小时
+            remaining_time = 7200 - (current_time - last_fly_time)
             mins = int(remaining_time // 60) + 1
             yield event.plain_result(f"✈️ 油箱空了，{nickname} {mins}分钟后可再起飞")
             return
