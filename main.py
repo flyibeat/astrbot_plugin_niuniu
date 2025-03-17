@@ -218,6 +218,7 @@ class NiuniuPlugin(Star):
     def get_group_data(self, group_id):
         """获取群组数据"""
         group_id = str(group_id)
+        self.niuniu_lengths = self._load_niuniu_lengths()
         if group_id not in self.niuniu_lengths:
             self.niuniu_lengths[group_id] = {'plugin_enabled': False}  # 默认关闭插件
         return self.niuniu_lengths[group_id]
