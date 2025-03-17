@@ -324,9 +324,20 @@ class NiuniuPlugin(Star):
             for cmd, handler in handler_map.items():
                 if msg.startswith(cmd):
                     # 检查是否正在开冲
-                    user_id = str(event.get_sender_id())
-                    group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
-                    user_data = self.get_user_data(group_id, user_id)                    
+                    user_id = str(event.get_sender_id()) 
+                    
+                    # 从YAML文件中加载数据
+                    niuniu_lengths = self._load_niuniu_lengths()
+                    group_data = niuniu_lengths.get(group_id, {'plugin_enabled': False})
+
+                    # 如果插件未启用，提示并返回
+                    if not group_data.get('plugin_enabled', False):
+                        yield event.plain_result("❌ 插件未启用")
+                        return
+
+                    user_data = group_data.get(user_id)
+
+                    # 判断是否开冲
                     if user_data and user_data.get('is_rushing', False):
                         yield event.plain_result("❌ 牛牛快冲晕了，还做不了其他事情，要不先停止开冲？")
                         return
