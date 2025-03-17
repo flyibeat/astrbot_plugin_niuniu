@@ -325,7 +325,8 @@ class NiuniuPlugin(Star):
                 if msg.startswith(cmd):
                     # 检查是否正在开冲
                     user_id = str(event.get_sender_id())
-                    user_data = self.get_user_data(group_id, user_id)
+                    group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
+                    user_data = self.get_user_data(group_id, user_id)                    
                     if user_data and user_data.get('is_rushing', False):
                         yield event.plain_result("❌ 牛牛快冲晕了，还做不了其他事情，要不先停止开冲？")
                         return
