@@ -576,8 +576,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(user_data['length'] - original_target_length)} → {self.format_length(user_data['length'])}",
                     f"🛡️ {target_data['nickname']}: {self.format_length(original_target_length)} → 1cm"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
             elif effect_chance < 0.6:  # 10%的概率清空自己的长度
@@ -589,8 +589,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(original_user_length)} → 1cm",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
             else:  # 40%的概率无效
@@ -600,8 +600,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(user_data['length'])}",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
 
@@ -646,6 +646,7 @@ class NiuniuPlugin(Star):
                 user_data['length'] += extra_loot
                 total_gain += extra_loot
                 text += f"\n🔥 淬火爪刀触发！额外掠夺 {extra_loot}cm！"
+                self._save_niuniu_lengths()    
                 self.shop.consume_item(group_id, user_id, "淬火爪刀")  
 
             if abs(u_len - t_len) >= 20 and user_data['hardness'] < target_data['hardness']:
@@ -653,12 +654,14 @@ class NiuniuPlugin(Star):
                 user_data['length'] += extra_gain
                 total_gain += extra_gain
                 text += f"\n🎁 由于极大劣势获胜，额外增加 {extra_gain}cm！"
+                self._save_niuniu_lengths()
             if abs(u_len - t_len) > 10 and u_len < t_len:
                 stolen_length = int(target_data['length'] * 0.2)
                 user_data['length'] += stolen_length
                 total_gain += stolen_length
                 target_data['length'] = max(1, target_data['length'] - stolen_length)
                 text += f"\n🎉 {nickname} 掠夺了 {stolen_length}cm！"
+                self._save_niuniu_lengths()
             if abs(u_len - t_len) <= 5 and user_data['hardness'] > target_data['hardness']:
                 text += f"\n🎉 {nickname} 因硬度优势获胜！"
             if total_gain == 0:
@@ -667,6 +670,7 @@ class NiuniuPlugin(Star):
             gain = random.randint(0, 6)
             loss = random.randint(1, 3)
             target_data['length'] += gain
+            self._save_niuniu_lengths()
             if self.shop.consume_item(group_id, user_id, "余震"):
                 result_msg = [f"🛡️ 【余震生效】{nickname} 未减少长度！"]
             else:
