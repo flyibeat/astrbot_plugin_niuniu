@@ -50,7 +50,7 @@ class NiuniuShop:
                 'id': 5,
                 'name': "余震",
                 'type': 'passive',
-                'max': 3,
+                'max': 6,
                 'desc': "主动比划时，如果失败，百分百不扣长度",
                 'effect': 'no_deduct_on_fail',
                 'price': 30  
@@ -71,7 +71,7 @@ class NiuniuShop:
                 'quantity': 5,  
                 'desc': "短时间内多次打胶或比划，同时不受30分钟内连续打胶的debuff",
                 'effect': 'no_30min_debuff', 
-                'price': 100 
+                'price': 20 
             },
             {
                 'id': 8,
