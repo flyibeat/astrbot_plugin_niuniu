@@ -682,7 +682,8 @@ class NiuniuPlugin(Star):
             nickname=nickname,
             target_nickname=target_data['nickname'],
             loss=loss            
-            if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:  #self.shop.consume_item(group_id, user_id, "余震")
+            if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:
+            #self.shop.consume_item(group_id, user_id, "余震")
                 shop5 = 1
                 text += f"\n🛡️ 【余震生效】{nickname} 主动比划失败，未减少长度！"
             else:
