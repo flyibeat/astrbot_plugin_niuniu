@@ -577,8 +577,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(user_data['length'] - original_target_length)} → {self.format_length(user_data['length'])}",
                     f"🛡️ {target_data['nickname']}: {self.format_length(original_target_length)} → 1cm"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
             elif effect_chance < 0.6:  # 10%的概率清空自己的长度
@@ -590,8 +590,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(original_user_length)} → 1cm",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
             else:  # 40%的概率无效
@@ -601,8 +601,8 @@ class NiuniuPlugin(Star):
                     f"🗡️ {nickname}: {self.format_length(user_data['length'])}",
                     f"🛡️ {target_data['nickname']}: {self.format_length(target_data['length'])}"
                 ]
-                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")
                 self._save_niuniu_lengths()
+                self.shop.consume_item(group_id, user_id, "夺心魔蝌蚪罐头")                
                 yield event.plain_result("\n".join(result_msg))
                 return
 
