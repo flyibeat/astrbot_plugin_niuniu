@@ -51,7 +51,7 @@ class NiuniuShop:
                 'name': "余震",
                 'type': 'passive',
                 'max': 3,
-                'desc': "被比划时，如果失败，不扣长度",
+                'desc': "主动比划时，如果失败，百分百不扣长度",
                 'effect': 'no_deduct_on_fail',
                 'price': 80  
             },
