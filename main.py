@@ -678,16 +678,16 @@ class NiuniuPlugin(Star):
             gain = random.randint(0, 6)
             loss = random.randint(1, 3)
             target_data['length'] += gain
+            text = random.choice(self.niuniu_texts['compare']['lose']).format(
+            nickname=nickname,
+            target_nickname=target_data['nickname'],
+            loss=loss            
             if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:  #self.shop.consume_item(group_id, user_id, "余震")
                 shop5 = 1
                 text += f"\n🛡️ 【余震生效】{nickname} 主动比划失败，未减少长度！"
             else:
                 user_data['length'] = max(1, user_data['length'] - loss)
-                 text += f"\n💔 {nickname} 主动比划失败，减少 {loss}cm"
-            text = random.choice(self.niuniu_texts['compare']['lose']).format(
-                nickname=nickname,
-                target_nickname=target_data['nickname'],
-                loss=loss
+                text += f"\n💔 {nickname} 主动比划失败，减少 {loss}cm"
             )
         # 硬度衰减
         if random.random() < 0.3:
