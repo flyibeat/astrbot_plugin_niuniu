@@ -651,7 +651,8 @@ class NiuniuPlugin(Star):
                 user_data['length'] += extra_loot
                 total_gain += extra_loot
                 text += f"\n🔥 淬火爪刀触发！额外掠夺 {extra_loot}cm！"
-                self.shop.consume_item(group_id, user_id, "淬火爪刀")  
+                # self.shop.consume_item(group_id, user_id, "淬火爪刀")  
+                shop4 = 1
 
             if abs(u_len - t_len) >= 20 and user_data['hardness'] < target_data['hardness']:
                 extra_gain = random.randint(3, 8)
@@ -672,7 +673,8 @@ class NiuniuPlugin(Star):
             gain = random.randint(0, 6)
             loss = random.randint(1, 3)
             target_data['length'] += gain
-            if self.shop.consume_item(group_id, user_id, "余震"):
+            if (self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:  #self.shop.consume_item(group_id, user_id, "余震")
+                shop5 = 1
                 result_msg = [f"🛡️ 【余震生效】{nickname} 未减少长度！"]
             else:
                 user_data['length'] = max(1, user_data['length'] - loss)
@@ -689,6 +691,13 @@ class NiuniuPlugin(Star):
             target_data['hardness'] = max(1, target_data['hardness'] - 1)
 
         self._save_niuniu_lengths()
+        if shop4 == 1:
+            self.shop.consume_item(group_id, user_id, "淬火爪刀")
+            shop4 = 0
+        if shop5 == 1:
+            self.shop.consume_item(group_id, user_id, "余震")
+            shop5 = 0
+            
         result_msg = [
             "⚔️ 【牛牛对决结果】 ⚔️",
             f"🗡️ {nickname}: {self.format_length(old_u_len)} → {self.format_length(user_data['length'])}",
@@ -699,8 +708,15 @@ class NiuniuPlugin(Star):
         if abs(u_len - t_len) <= 5 and random.random() < 0.075:
             result_msg.append("💥 双方势均力敌！")
             special_event_triggered = True
+
+        # 重新加载数据
+        group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
+        self.niuniu_lengths = self._load_niuniu_lengths()
+        user_data = self.get_user_data(group_id, user_id)
+        target_data = self.get_user_data(group_id, target_id)
         # 硬度过低触发缠绕
         if not special_event_triggered and (user_data['hardness'] <= 2 or target_data['hardness'] <= 2) and random.random() < 0.05:
+                      
             # 记录双方原始长度
             original_user_len = user_data['length']
             original_target_len = target_data['length']
@@ -713,19 +729,22 @@ class NiuniuPlugin(Star):
             if self.shop.get_user_items(group_id, user_id).get("妙脆角", 0) > 0:
                 user_data['length'] = original_user_len  # 恢复发起方
                 result_msg.append(f"🛡️ {nickname} 的妙脆角生效，防止了长度减半！")
-                self.shop.consume_item(group_id, user_id, "妙脆角")
+                # self.shop.consume_item(group_id, user_id, "妙脆角")
+                shop3user = 1
             
             # 检查目标方妙脆角
             if self.shop.get_user_items(group_id, target_id).get("妙脆角", 0) > 0:
                 target_data['length'] = original_target_len  # 恢复目标方
                 result_msg.append(f"🛡️ {target_data['nickname']} 的妙脆角生效，防止了长度减半！")
-                self.shop.consume_item(group_id, target_id, "妙脆角")
+                # self.shop.consume_item(group_id, target_id, "妙脆角")
+                shop3target = 1
             
             result_msg.append("双方牛牛因过于柔软发生缠绕！")
             special_event_triggered = True
 
         # 长度相近触发减半
         if not special_event_triggered and abs(u_len - t_len) < 10 and random.random() < 0.025:
+                        
             original_user_len = user_data['length']
             original_target_len = target_data['length']
             
@@ -736,18 +755,26 @@ class NiuniuPlugin(Star):
             if self.shop.get_user_items(group_id, user_id).get("妙脆角", 0) > 0:
                 user_data['length'] = original_user_len
                 result_msg.append(f"🛡️ {nickname} 的妙脆角生效，防止了长度减半！")
-                self.shop.consume_item(group_id, user_id, "妙脆角")
+                # self.shop.consume_item(group_id, user_id, "妙脆角")
+                shop3user = 1
             
             # 检查目标方
             if self.shop.get_user_items(group_id, target_id).get("妙脆角", 0) > 0:
                 target_data['length'] = original_target_len
                 result_msg.append(f"🛡️ {target_data['nickname']} 的妙脆角生效，防止了长度减半！")
-                self.shop.consume_item(group_id, target_id, "妙脆角")
+                # self.shop.consume_item(group_id, target_id, "妙脆角")
+                shop3target = 1
             
             result_msg.append(self.niuniu_texts['compare']['double_loss'].format(nickname1=nickname, nickname2=target_data['nickname']))
             special_event_triggered = True
 
         self._save_niuniu_lengths()
+        if shop3user == 1:
+            self.shop.consume_item(group_id, user_id, "妙脆角")
+            shop3user = 0
+        if shop3target = 1:
+            self.shop.consume_item(group_id, target_id, "妙脆角")
+            shop3target = 0
         yield event.plain_result("\n".join(result_msg))
     async def _show_status(self, event):
         """查看牛牛状态"""
