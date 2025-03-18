@@ -772,7 +772,7 @@ class NiuniuPlugin(Star):
         if shop3user == 1:
             self.shop.consume_item(group_id, user_id, "妙脆角")
             shop3user = 0
-        if shop3target = 1:
+        if shop3target == 1:
             self.shop.consume_item(group_id, target_id, "妙脆角")
             shop3target = 0
         yield event.plain_result("\n".join(result_msg))
