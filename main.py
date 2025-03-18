@@ -412,6 +412,7 @@ class NiuniuPlugin(Star):
         group_id = str(event.message_obj.group_id)
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
+        shop7 = 0
 
         group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
@@ -504,6 +505,10 @@ class NiuniuPlugin(Star):
         group_id = str(event.message_obj.group_id)
         user_id = str(event.get_sender_id())
         nickname = event.get_sender_name()
+        shop4 = 0
+        shop5 = 0
+        shop3user = 0
+        shop3target = 0
 
         group_data = self._load_niuniu_lengths().get(group_id, {'plugin_enabled': False})
         if not group_data.get('plugin_enabled', False):
