@@ -438,7 +438,8 @@ class NiuniuPlugin(Star):
         # 只有在冷却期内且持有道具时才触发效果
         if on_cooldown and has_zhiming_rhythm:
             # 消耗道具并跳过冷却
-            self.shop.consume_item(group_id, user_id, "致命节奏")
+            # self.shop.consume_item(group_id, user_id, "致命节奏")
+            shop7 = 1
             result_msg.append(f"⚡ 触发致命节奏！{nickname} 无视冷却强行打胶！")
             elapsed = self.COOLDOWN_30_MIN + 1  # 强制进入增益逻辑
         else:
@@ -477,6 +478,9 @@ class NiuniuPlugin(Star):
         self.last_actions.setdefault(group_id, {}).setdefault(user_id, {})['dajiao'] = current_time
         self._save_last_actions()
         self._save_niuniu_lengths()
+        if shop7 == 1:
+            self.shop.consume_item(group_id, user_id, "致命节奏")
+            shop7 = 0
 
         # 生成消息
         if change > 0:
