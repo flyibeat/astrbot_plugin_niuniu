@@ -418,6 +418,7 @@ class NiuniuPlugin(Star):
             yield event.plain_result("❌ 插件未启用")
             return
 
+        self.niuniu_lengths = self._load_niuniu_lengths()
         user_data = self.get_user_data(group_id, user_id)
         if not user_data:
             text = self.niuniu_texts['dajiao']['not_registered'].format(nickname=nickname)
@@ -505,6 +506,7 @@ class NiuniuPlugin(Star):
             yield event.plain_result("❌ 插件未启用")
             return
 
+        self.niuniu_lengths = self._load_niuniu_lengths()
         # 获取自身数据
         user_data = self.get_user_data(group_id, user_id)
         if not user_data:
