@@ -649,7 +649,7 @@ class NiuniuPlugin(Star):
                 gain=gain
             )
             total_gain = gain
-            if (self.shop.get_user_items(group_id, user_id).get("淬火爪刀", 0) > 0 
+            if (self.shop.get_user_items(group_id, user_id).get("淬火爪刀", 0) > 0
                 and abs(u_len - t_len) > 10 
                 and u_len < t_len):
                 extra_loot = int(target_data['length'] * 0.1)
@@ -683,7 +683,7 @@ class NiuniuPlugin(Star):
             target_nickname=target_data['nickname'],
             loss=loss
                 #self.shop.consume_item(group_id, user_id, "余震")
-            if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:            
+            if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:
                 shop5 = 1
                 text += f"\n🛡️ 【余震生效】{nickname} 主动比划失败，未减少长度！"
             else:
