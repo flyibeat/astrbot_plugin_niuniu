@@ -673,7 +673,7 @@ class NiuniuPlugin(Star):
             gain = random.randint(0, 6)
             loss = random.randint(1, 3)
             target_data['length'] += gain
-            if (self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:  #self.shop.consume_item(group_id, user_id, "余震")
+            if self.shop.get_user_items(group_id, user_id).get("余震", 0) > 0:  #self.shop.consume_item(group_id, user_id, "余震")
                 shop5 = 1
                 result_msg = [f"🛡️ 【余震生效】{nickname} 未减少长度！"]
             else:
