@@ -49,12 +49,6 @@ class NiuniuGames:
             user_data['today_rush_count'] = 0
             user_data['last_rush_start_date'] = current_date  # 更新为今日日期
 
-        # 检查今日已冲次数
-        today_rush_count = user_data.get('today_rush_count', 0)
-        if today_rush_count >= 3:
-            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
-            return
-
         # 检查冷却时间
         # last_rush_end_time = user_data.get('last_rush_end_time', 0)
         # current_time = time.time()
@@ -75,6 +69,12 @@ class NiuniuGames:
                 yield event.plain_result(f"⏳ {nickname} 你上一轮还未停止哦，请先停止开冲获取收益")
                 return
                 
+        # 检查今日已冲次数
+        today_rush_count = user_data.get('today_rush_count', 0)
+        if today_rush_count >= 3:
+            yield event.plain_result(f" {nickname} 你冲得到处都是，明天再来吧")
+            return
+            
         # 更新开冲状态
         user_data['is_rushing'] = True
         user_data['rush_start_time'] = current_time
