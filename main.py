@@ -692,9 +692,9 @@ class NiuniuPlugin(Star):
             
         # 硬度衰减
         if random.random() < 0.3:
-            user_data['hardness'] = max(1, user_data['hardness'] - 1)
+            user_data['hardness'] = min(10, max(1, user_data['hardness'] - 1))
         if random.random() < 0.3:
-            target_data['hardness'] = max(1, target_data['hardness'] - 1)
+            target_data['hardness'] = min(10, max(1, target_data['hardness'] - 1))
 
         self._save_niuniu_lengths()
         if shop4 == 1:
