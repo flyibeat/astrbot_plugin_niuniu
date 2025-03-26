@@ -628,7 +628,7 @@ class NiuniuPlugin(Star):
         length_factor = (u_len - t_len) / max(u_len, t_len) * 0.2
 
         # 硬度影响（最多影响10%的胜率）
-        hardness_factor = (u_hardness - t_hardness) * 0.05
+        hardness_factor = (u_hardness - t_hardness) * 0.01
 
         # 最终胜率（限制在20%-80%之间）
         win_prob = min(max(base_win + length_factor + hardness_factor, 0.2), 0.8)
